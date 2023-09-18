@@ -1,20 +1,19 @@
 const { Console, Random } = require("@woowacourse/mission-utils");
 
 class App {
-  play() {
-    const COM_VALUE = Random.pickNumberInRange(1, 999);
-    const user_values = [];
+  async play() {
+    const COM_VALUE = parseInt(
+      [
+        Random.pickNumberInRange(1, 9),
+        Random.pickNumberInRange(1, 9),
+        Random.pickNumberInRange(1, 9),
+      ].join("")
+    );
 
     while (true) {
-      //입력값 주어지지 않을 때 break;
-      const USER_VALUES_NUM = user_values.length;
-      Console.readLine("유저 값 입력", (user_value) => {
-        user_values.push(user_value);
-      });
-      if (USER_VALUES_NUM === user_values.length) break;
+      const CUR_USER_VALUE = await this.getUserValue();
 
       // 입력값 유효성 검사
-      const CUR_USER_VALUE = user_values[user_values.length - 1];
       try {
         this.valueValidation(CUR_USER_VALUE);
       } catch (err) {
@@ -27,16 +26,32 @@ class App {
         CUR_USER_VALUE
       );
 
-      Console.print(`${BALL}볼 ${STRIKE}스트라이크`);
+      //메세지 출력
+      this.printMessage(BALL, STRIKE);
+
+      //정답시 끝내기
+      if (STRIKE === 3) {
+        this.printEnd();
+        break;
+      }
     }
   }
+  //유저의 값을 입력받습니다.
+  getUserValue() {
+    return new Promise((resolve) => {
+      Console.readLine("유저 값 입력", (user_input) => {
+        resolve(user_input);
+      });
+    });
+  }
 
+  //유저가 입력한 값의 유효성 검사를 실시합니다.
   valueValidation(value) {
     if (parseInt(value) === NaN) {
       throw new Error("입력값은 숫자형식만 가능합니다.");
     }
-    if (value.length === 0 || value.length > 3) {
-      throw new Error("입력값은 1이상 1000이하 이어야 합니다.");
+    if (value.length !== 3) {
+      throw new Error("입력값은 100이상 999이하 이어야 합니다.");
     }
   }
 
@@ -58,6 +73,24 @@ class App {
     });
 
     return { ball, strike };
+  }
+
+  printMessage(ball, strike) {
+    if (ball === 0 && strike === 0) Console.print("낫싱");
+    else if (ball === 0) Console.print(`${strike}스트라이크`);
+    else if (strike === 0) Console.print(`${ball}볼`);
+    else Console.print(`${ball}볼 ${strike}스트라이크`);
+  }
+
+  printEnd() {
+    console.log("3개의 숫자를 모두 맞히셨습니다! 게임 종료");
+    Console.readLine(
+      "게임을 새로 시작하려면 1, 종료하려면 2를 입력하세요.",
+      (input) => {
+        if (input.toString() === "1") this.play();
+        else if (input.toString() === "2") Console.print("게임 종료");
+      }
+    );
   }
 }
 
